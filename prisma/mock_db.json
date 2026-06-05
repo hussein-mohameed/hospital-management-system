@@ -1,0 +1,279 @@
+{
+  "user": [
+    {
+      "id": "mock-admin-id",
+      "username": "admin",
+      "email": "admin@hospital.com",
+      "passwordHash": "$2a$10$U7v02P3J6R7fB3L3c.sWaeK8BqBwFf1C0eT1B9u0C.9mZc9Uu.C9u",
+      "role": "SUPER_ADMIN",
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "mock-doc-user-1",
+      "username": "ali.rawi",
+      "email": "ali.rawi@hospital.com",
+      "passwordHash": "$2a$10$U7v02P3J6R7fB3L3c.sWaeK8BqBwFf1C0eT1B9u0C.9mZc9Uu.C9u",
+      "role": "DOCTOR",
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "mock-doc-user-2",
+      "username": "fatima.husseini",
+      "email": "fatima.husseini@hospital.com",
+      "passwordHash": "$2a$10$U7v02P3J6R7fB3L3c.sWaeK8BqBwFf1C0eT1B9u0C.9mZc9Uu.C9u",
+      "role": "DOCTOR",
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "mock-doc-user-3",
+      "username": "hussein.mohammed",
+      "email": "hussein.mohammed@hospital.com",
+      "passwordHash": "$2a$10$U7v02P3J6R7fB3L3c.sWaeK8BqBwFf1C0eT1B9u0C.9mZc9Uu.C9u",
+      "role": "DOCTOR",
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    }
+  ],
+  "doctor": [
+    {
+      "id": "doc-1",
+      "userId": "mock-doc-user-1",
+      "fullName": "د. علي الراوي",
+      "specialty": "أمراض القلب والأوعية الدموية",
+      "phone": "07701122334",
+      "isActive": true,
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "doc-2",
+      "userId": "mock-doc-user-2",
+      "fullName": "د. فاطمة الحسيني",
+      "specialty": "طب الأطفال وحديثي الولادة",
+      "phone": "07802233445",
+      "isActive": true,
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "doc-3",
+      "userId": "mock-doc-user-3",
+      "fullName": "د. حسين محمد",
+      "specialty": "الجراحة العامة والأورام",
+      "phone": "07903344556",
+      "isActive": true,
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    }
+  ],
+  "patient": [
+    {
+      "id": "patient-1",
+      "fullName": "حسن علي الموسوي",
+      "dateOfBirth": "1985-04-12T00:00:00.000Z",
+      "region": "بغداد، الكرادة",
+      "email": "hassan.ali@gmail.com",
+      "phone": "07701234567",
+      "description": "يعاني من ضغط الدم المرتفع المزمن وحساسية من البنسلين.",
+      "isActive": true,
+      "createdAt": "2026-05-28T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "patient-2",
+      "fullName": "زهراء جعفر الصائغ",
+      "dateOfBirth": "1992-09-24T00:00:00.000Z",
+      "region": "البصرة، العشار",
+      "email": "zahra.jafar@yahoo.com",
+      "phone": "07809876543",
+      "description": "متابعة حمل طبيعي في الشهر الخامس.",
+      "isActive": true,
+      "createdAt": "2026-05-29T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "patient-3",
+      "fullName": "مصطفى كمال الدين الأربيلية",
+      "dateOfBirth": "1978-01-05T00:00:00.000Z",
+      "region": "أربيل، عنكاوة",
+      "email": "mustafa.k@gmail.com",
+      "phone": "07501112223",
+      "description": "مريض سكري من النوع الثاني يحتاج جرعات إنسولين منتظمة.",
+      "isActive": true,
+      "createdAt": "2026-05-30T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "patient-4",
+      "fullName": "كرار حسين الخفاجي",
+      "dateOfBirth": "2000-11-30T00:00:00.000Z",
+      "region": "النجف، الكوفة",
+      "email": "karrar.h@gmail.com",
+      "phone": "07712345678",
+      "description": "فحص روتيني رياضي لإصابة طفيفة في الكاحل الأيسر.",
+      "isActive": true,
+      "createdAt": "2026-05-31T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "patient-5",
+      "fullName": "مريم يوسف الربيعي",
+      "dateOfBirth": "1965-06-18T00:00:00.000Z",
+      "region": "كربلاء، حي الحسين",
+      "email": "maryam.y@gmail.com",
+      "phone": "07812233445",
+      "description": "تعاني من آلام مفاصل روماتيزمية وتتلقى علاج مسكن دوري.",
+      "isActive": true,
+      "createdAt": "2026-06-01T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    }
+  ],
+  "examination": [
+    {
+      "id": "exam-1",
+      "name": "تحليل الدم الكامل CBC",
+      "category": "BLOOD",
+      "normalRange": "4.5 - 11.0",
+      "unit": "10^3/uL",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "exam-2",
+      "name": "فحص السكر التراكمي HbA1c",
+      "category": "BLOOD",
+      "normalRange": "4.8 - 5.6",
+      "unit": "%",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "exam-3",
+      "name": "فحص وظائف الكلى Creatinine",
+      "category": "BLOOD",
+      "normalRange": "0.6 - 1.2",
+      "unit": "mg/dL",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "exam-4",
+      "name": "فحص السكر الصائم Fasting Blood Sugar",
+      "category": "BLOOD",
+      "normalRange": "70 - 99",
+      "unit": "mg/dL",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "exam-5",
+      "name": "تحليل البول العام Urine Analysis",
+      "category": "URINE",
+      "normalRange": "Negative",
+      "unit": "",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "exam-6",
+      "name": "تخطيط كهربائية القلب ECG",
+      "category": "CARDIAC",
+      "normalRange": "Normal sinus rhythm",
+      "unit": "",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "exam-7",
+      "name": "أشعة الصدر Chest X-Ray",
+      "category": "IMAGING",
+      "normalRange": "Clear lung fields",
+      "unit": "",
+      "createdAt": "2026-06-02T18:43:20.283Z"
+    }
+  ],
+  "visit": [
+    {
+      "id": "visit-1",
+      "patientId": "patient-1",
+      "visitDate": "2026-05-31T18:43:20.283Z",
+      "status": "COMPLETED",
+      "chiefComplaint": "خفقان مستمر في القلب وصداع في مؤخرة الرأس عند الاستيقاظ.",
+      "notes": "ضغط الدم المقاس 160/95. النبض 92 نبضة بالدقيقة. علامات إعياء عام.",
+      "diagnosis": "ارتفاع حاد مؤقت لضغط الدم الأساسي مع إجهاد بدني.",
+      "createdAt": "2026-05-31T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "visit-2",
+      "patientId": "patient-3",
+      "visitDate": "2026-06-02T18:43:20.283Z",
+      "status": "IN_PROGRESS",
+      "chiefComplaint": "مراجعة دورية لضبط جرعة الإنسولين مع إحساس بالدوار صباحاً.",
+      "notes": "السكر المقاس عشوائياً 142. الوزن ثابت.",
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    },
+    {
+      "id": "visit-3",
+      "patientId": "patient-5",
+      "visitDate": "2026-06-03T18:43:20.283Z",
+      "status": "PENDING",
+      "chiefComplaint": "آلام حادة أسفل الظهر تمتد للرجل اليمنى مع صعوبة في الحركة.",
+      "notes": "محجوز مسبقاً للفحص السريري العام.",
+      "createdAt": "2026-06-03T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    }
+  ],
+  "visitDoctor": [
+    {
+      "visitId": "visit-1",
+      "doctorId": "doc-1"
+    },
+    {
+      "visitId": "visit-2",
+      "doctorId": "doc-2"
+    },
+    {
+      "visitId": "visit-3",
+      "doctorId": "doc-3"
+    }
+  ],
+  "visitExam": [
+    {
+      "id": "ve-1",
+      "visitId": "visit-1",
+      "examinationId": "exam-6",
+      "result": "Normal sinus rhythm with slight left axis deviation",
+      "status": "COMPLETED",
+      "performedAt": "2026-05-31T18:43:20.283Z"
+    },
+    {
+      "id": "ve-2",
+      "visitId": "visit-1",
+      "examinationId": "exam-3",
+      "result": "0.9",
+      "status": "COMPLETED",
+      "performedAt": "2026-05-31T18:43:20.283Z"
+    },
+    {
+      "id": "ve-3",
+      "visitId": "visit-2",
+      "examinationId": "exam-2",
+      "status": "PENDING"
+    },
+    {
+      "id": "ve-4",
+      "visitId": "visit-2",
+      "examinationId": "exam-4",
+      "status": "PENDING"
+    }
+  ],
+  "report": [
+    {
+      "id": "rep-1",
+      "visitId": "visit-1",
+      "content": "بعد إجراء التخطيط والفحص السريري، تبين وجود تشنج خفيف بالشرايين بسبب الإجهاد. تم كتابة علاج (Concor 5mg) حبة واحدة صباحاً مع تقليل الملح والراحة لمدة 3 أيام.",
+      "status": "TREATED",
+      "createdAt": "2026-06-02T18:43:20.283Z",
+      "updatedAt": "2026-06-02T18:43:20.283Z"
+    }
+  ]
+}

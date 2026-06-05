@@ -1,0 +1,163 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ==================== AUTH ====================
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  email        String   @unique
+  passwordHash String
+  role         Role     @default(DOCTOR)
+  doctor       Doctor?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("users")
+}
+
+enum Role {
+  SUPER_ADMIN
+  ADMIN
+  DOCTOR
+  RECEPTIONIST
+}
+
+// ==================== DOCTOR ====================
+
+model Doctor {
+  id        String        @id @default(cuid())
+  userId    String        @unique
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName  String
+  specialty String
+  phone     String?
+  avatarUrl String?
+  isActive  Boolean       @default(true)
+  visits    VisitDoctor[]
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  @@map("doctors")
+}
+
+// ==================== PATIENT ====================
+
+model Patient {
+  id          String   @id @default(cuid())
+  fullName    String
+  avatarUrl   String?
+  dateOfBirth DateTime
+  region      String
+  email       String?  @unique
+  phone       String
+  description String?
+  isActive    Boolean  @default(true)
+  visits      Visit[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("patients")
+}
+
+// ==================== VISIT ====================
+
+model Visit {
+  id             String        @id @default(cuid())
+  patientId      String
+  patient        Patient       @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  visitDate      DateTime
+  status         VisitStatus   @default(PENDING)
+  chiefComplaint String
+  notes          String?
+  diagnosis      String?
+  doctors        VisitDoctor[]
+  examinations   VisitExam[]
+  report         Report?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@map("visits")
+}
+
+enum VisitStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+// Many-to-Many: Visit <-> Doctor
+model VisitDoctor {
+  visitId  String
+  doctorId String
+  visit    Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  doctor   Doctor  @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  role     String?
+
+  @@id([visitId, doctorId])
+  @@map("visit_doctors")
+}
+
+// ==================== EXAMINATION ====================
+
+model Examination {
+  id          String      @id @default(cuid())
+  name        String
+  category    String
+  description String?
+  unit        String?
+  normalRange String?
+  visits      VisitExam[]
+  createdAt   DateTime    @default(now())
+
+  @@map("examinations")
+}
+
+// Many-to-Many: Visit <-> Examination (with result)
+model VisitExam {
+  id            String      @id @default(cuid())
+  visitId       String
+  examinationId String
+  visit         Visit       @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  examination   Examination @relation(fields: [examinationId], references: [id])
+  result        String?
+  status        ExamStatus  @default(PENDING)
+  notes         String?
+  performedAt   DateTime?
+
+  @@unique([visitId, examinationId])
+  @@map("visit_examinations")
+}
+
+enum ExamStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+}
+
+// ==================== REPORT ====================
+
+model Report {
+  id        String     @id @default(cuid())
+  visitId   String     @unique
+  visit     Visit      @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  content   String
+  status    CaseStatus @default(OPEN)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("reports")
+}
+
+enum CaseStatus {
+  OPEN
+  TREATED
+  FOLLOW_UP
+  CLOSED
+}
