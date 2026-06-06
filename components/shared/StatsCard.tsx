@@ -1,5 +1,4 @@
 import { LucideIcon } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 type StatsCardProps = {
@@ -19,67 +18,101 @@ export function StatsCard({
 }: StatsCardProps) {
   const variantStyles = {
     cyan: {
-      bg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-      glow: "shadow-cyan-500/5",
-      gradient: "from-cyan-500 to-teal-500",
+      iconBg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
+      glowClass: "glow-cyan",
+      shimmer: "from-transparent via-cyan-400/60 to-transparent",
+      orbClass: "glow-orb-cyan",
+      textAccent: "text-cyan-400",
+      valueGlow: "drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]",
     },
     emerald: {
-      bg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-      glow: "shadow-emerald-500/5",
-      gradient: "from-emerald-500 to-teal-500",
+      iconBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
+      glowClass: "glow-emerald",
+      shimmer: "from-transparent via-emerald-400/60 to-transparent",
+      orbClass: "glow-orb-emerald",
+      textAccent: "text-emerald-400",
+      valueGlow: "drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]",
     },
     purple: {
-      bg: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-      glow: "shadow-purple-500/5",
-      gradient: "from-purple-500 to-indigo-500",
+      iconBg: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+      glowClass: "glow-purple",
+      shimmer: "from-transparent via-purple-400/60 to-transparent",
+      orbClass: "glow-orb-purple",
+      textAccent: "text-purple-400",
+      valueGlow: "drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]",
     },
     amber: {
-      bg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-      glow: "shadow-amber-500/5",
-      gradient: "from-amber-500 to-orange-500",
+      iconBg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
+      glowClass: "glow-amber",
+      shimmer: "from-transparent via-amber-400/60 to-transparent",
+      orbClass: "glow-orb-amber",
+      textAccent: "text-amber-400",
+      valueGlow: "drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]",
     },
     rose: {
-      bg: "bg-rose-500/10 border-rose-500/20 text-rose-400",
-      glow: "shadow-rose-500/5",
-      gradient: "from-rose-500 to-pink-500",
+      iconBg: "bg-rose-500/10 border-rose-500/20 text-rose-400",
+      glowClass: "glow-cyan",
+      shimmer: "from-transparent via-rose-400/60 to-transparent",
+      orbClass: "glow-orb-cyan",
+      textAccent: "text-rose-400",
+      valueGlow: "drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]",
     },
   };
 
   const style = variantStyles[variant];
 
   return (
-    <Card
+    <div
       className={cn(
-        "relative overflow-hidden bg-slate-900 border-slate-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group",
-        style.glow
+        "glass-card relative overflow-hidden rounded-2xl p-6 group cursor-default",
+        style.glowClass
       )}
     >
-      {/* Decorative Gradient Background Blur */}
-      <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-slate-800 to-transparent opacity-30 rounded-bl-full pointer-events-none" />
+      {/* Ambient Glow Orb */}
+      <div
+        className={cn(
+          "glow-orb w-40 h-40 -top-12 -right-12",
+          style.orbClass
+        )}
+      />
 
-      <CardContent className="p-6 flex items-center justify-between gap-4">
-        <div className="space-y-2.5">
-          <p className="text-sm font-semibold text-slate-400">{title}</p>
-          <h3 className="text-3xl font-extrabold text-white tracking-tight">
+      {/* Shimmer Top Border */}
+      <div
+        className={cn(
+          "absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r shimmer-border",
+          style.shimmer
+        )}
+      />
+
+      {/* Inner Frost Layer */}
+      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
+
+      {/* Content */}
+      <div className="relative z-10 flex items-center justify-between gap-4">
+        <div className="space-y-2.5 min-w-0">
+          <p className="text-sm font-semibold text-slate-400 truncate">{title}</p>
+          <h3
+            className={cn(
+              "text-3xl font-extrabold text-white tracking-tight",
+              style.valueGlow
+            )}
+          >
             {value}
           </h3>
           {description && (
-            <p className="text-xs text-slate-500 font-medium">{description}</p>
+            <p className="text-xs text-slate-500 font-medium truncate">{description}</p>
           )}
         </div>
 
         <div
           className={cn(
-            "p-3 rounded-2xl border transition-transform duration-300 group-hover:scale-110",
-            style.bg
+            "p-3.5 rounded-2xl border transition-all duration-300 group-hover:scale-110 icon-ring-pulse shrink-0",
+            style.iconBg
           )}
         >
           <Icon className="h-6 w-6" />
         </div>
-      </CardContent>
-
-      {/* Thin Bottom Accent Line */}
-      <div className={cn("absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r", style.gradient)} />
-    </Card>
+      </div>
+    </div>
   );
 }
