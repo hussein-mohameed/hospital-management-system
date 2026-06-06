@@ -1,116 +1,89 @@
 import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+/* ────────────────────────────────────────────────────────
+   StatsCard — Premium Dark Glassmorphism Design
+   Deep glass panels with subtle 1px border highlights, 
+   glowing text, and a sleek layout.
+   ──────────────────────────────────────────────────────── */
+
+type Variant = "cyan" | "emerald" | "purple" | "amber";
+
 type StatsCardProps = {
   title: string;
   value: string | number;
-  description?: string;
   icon: LucideIcon;
-  variant?: "cyan" | "emerald" | "purple" | "amber" | "rose";
+  variant?: Variant;
 };
 
-export function StatsCard({
-  title,
-  value,
-  description,
-  icon: Icon,
-  variant = "cyan",
-}: StatsCardProps) {
-  const variantStyles = {
-    cyan: {
-      iconBg: "bg-cyan-500/10 border-cyan-500/20 text-cyan-400",
-      glowClass: "glow-cyan",
-      shimmer: "from-transparent via-cyan-400/60 to-transparent",
-      orbClass: "glow-orb-cyan",
-      textAccent: "text-cyan-400",
-      valueGlow: "drop-shadow-[0_0_8px_rgba(6,182,212,0.3)]",
-    },
-    emerald: {
-      iconBg: "bg-emerald-500/10 border-emerald-500/20 text-emerald-400",
-      glowClass: "glow-emerald",
-      shimmer: "from-transparent via-emerald-400/60 to-transparent",
-      orbClass: "glow-orb-emerald",
-      textAccent: "text-emerald-400",
-      valueGlow: "drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]",
-    },
-    purple: {
-      iconBg: "bg-purple-500/10 border-purple-500/20 text-purple-400",
-      glowClass: "glow-purple",
-      shimmer: "from-transparent via-purple-400/60 to-transparent",
-      orbClass: "glow-orb-purple",
-      textAccent: "text-purple-400",
-      valueGlow: "drop-shadow-[0_0_8px_rgba(139,92,246,0.3)]",
-    },
-    amber: {
-      iconBg: "bg-amber-500/10 border-amber-500/20 text-amber-400",
-      glowClass: "glow-amber",
-      shimmer: "from-transparent via-amber-400/60 to-transparent",
-      orbClass: "glow-orb-amber",
-      textAccent: "text-amber-400",
-      valueGlow: "drop-shadow-[0_0_8px_rgba(245,158,11,0.3)]",
-    },
-    rose: {
-      iconBg: "bg-rose-500/10 border-rose-500/20 text-rose-400",
-      glowClass: "glow-cyan",
-      shimmer: "from-transparent via-rose-400/60 to-transparent",
-      orbClass: "glow-orb-cyan",
-      textAccent: "text-rose-400",
-      valueGlow: "drop-shadow-[0_0_8px_rgba(244,63,94,0.3)]",
-    },
-  };
+const VARIANT_CONFIG: Record<Variant, { 
+  iconColor: string; 
+  iconGlow: string;
+  textGlow: string;
+  gradientLine: string;
+}> = {
+  cyan: {
+    iconColor: "text-cyan-400",
+    iconGlow: "drop-shadow-[0_0_12px_rgba(34,211,238,0.5)]",
+    textGlow: "drop-shadow-[0_0_16px_rgba(34,211,238,0.3)]",
+    gradientLine: "from-cyan-500/0 via-cyan-400/50 to-cyan-500/0",
+  },
+  emerald: {
+    iconColor: "text-emerald-400",
+    iconGlow: "drop-shadow-[0_0_12px_rgba(52,211,153,0.5)]",
+    textGlow: "drop-shadow-[0_0_16px_rgba(52,211,153,0.3)]",
+    gradientLine: "from-emerald-500/0 via-emerald-400/50 to-emerald-500/0",
+  },
+  purple: {
+    iconColor: "text-purple-400",
+    iconGlow: "drop-shadow-[0_0_12px_rgba(167,139,250,0.5)]",
+    textGlow: "drop-shadow-[0_0_16px_rgba(167,139,250,0.3)]",
+    gradientLine: "from-purple-500/0 via-purple-400/50 to-purple-500/0",
+  },
+  amber: {
+    iconColor: "text-amber-400",
+    iconGlow: "drop-shadow-[0_0_12px_rgba(251,191,36,0.5)]",
+    textGlow: "drop-shadow-[0_0_16px_rgba(251,191,36,0.3)]",
+    gradientLine: "from-amber-500/0 via-amber-400/50 to-amber-500/0",
+  },
+};
 
-  const style = variantStyles[variant];
+export function StatsCard({ title, value, icon: Icon, variant = "cyan" }: StatsCardProps) {
+  const config = VARIANT_CONFIG[variant];
 
   return (
     <div
       className={cn(
-        "glass-card relative overflow-hidden rounded-2xl p-6 group cursor-default",
-        style.glowClass
+        "relative overflow-hidden rounded-2xl p-6",
+        "glass-panel-premium group cursor-default",
       )}
     >
-      {/* Ambient Glow Orb */}
-      <div
+      {/* Top subtle gradient highlight line */}
+      <div 
         className={cn(
-          "glow-orb w-40 h-40 -top-12 -right-12",
-          style.orbClass
-        )}
+          "absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r opacity-50",
+          config.gradientLine
+        )} 
       />
 
-      {/* Shimmer Top Border */}
-      <div
-        className={cn(
-          "absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r shimmer-border",
-          style.shimmer
-        )}
-      />
-
-      {/* Inner Frost Layer */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/[0.03] to-transparent pointer-events-none" />
-
-      {/* Content */}
-      <div className="relative z-10 flex items-center justify-between gap-4">
-        <div className="space-y-2.5 min-w-0">
-          <p className="text-sm font-semibold text-slate-400 truncate">{title}</p>
-          <h3
+      <div className="relative z-10 flex items-start justify-between">
+        <div className="space-y-4">
+          <p className="text-sm font-medium text-slate-400 tracking-wide">{title}</p>
+          <h3 
             className={cn(
-              "text-3xl font-extrabold text-white tracking-tight",
-              style.valueGlow
+              "text-4xl font-extrabold text-white tracking-tight",
+              config.textGlow
             )}
           >
             {value}
           </h3>
-          {description && (
-            <p className="text-xs text-slate-500 font-medium truncate">{description}</p>
-          )}
         </div>
 
-        <div
-          className={cn(
-            "p-3.5 rounded-2xl border transition-all duration-300 group-hover:scale-110 icon-ring-pulse shrink-0",
-            style.iconBg
-          )}
-        >
-          <Icon className="h-6 w-6" />
+        <div className="p-3.5 rounded-2xl bg-white/[0.03] border border-white/[0.05] group-hover:bg-white/[0.06] transition-colors duration-300">
+          <Icon 
+            className={cn("h-7 w-7", config.iconColor, config.iconGlow)} 
+            strokeWidth={1.5} 
+          />
         </div>
       </div>
     </div>

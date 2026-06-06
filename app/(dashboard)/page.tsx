@@ -1,16 +1,61 @@
 import { prisma } from "@/lib/prisma";
 import { requireSession } from "@/lib/session";
 import { StatsCard } from "@/components/shared/StatsCard";
-import { VisitBarChart } from "@/components/shared/VisitBarChart";
-import { Users, Stethoscope, Calendar, TestTube, Plus, ArrowUpRight, BarChart, Sparkles, Zap } from "lucide-react";
+import { VisitAreaChart } from "@/components/shared/VisitAreaChart";
+import type { LucideIcon } from "lucide-react";
+import {
+  Users,
+  Stethoscope,
+  Calendar,
+  TestTube,
+  Plus,
+  ChevronRight,
+  BarChart3,
+  UserPlus,
+  CalendarPlus,
+  Microscope,
+} from "lucide-react";
 import Link from "next/link";
 import { getTranslations } from "@/lib/i18n";
 import { cookies } from "next/headers";
 import { Language } from "@/lib/i18n";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+
+/* ────────────────────────────────────────────────────────
+   Dashboard Page — Hospital Management System
+   Layout: Header → Stats Grid → [Chart + Quick Actions]
+                                → [Recent Visits + Examinations]
+   ──────────────────────────────────────────────────────── */
+
+/** Status badge colour map */
+const STATUS_STYLES: Record<string, { badge: string; dot: string }> = {
+  PENDING: {
+    badge: "bg-amber-500/15 text-amber-400 border-amber-500/20",
+    dot: "bg-amber-400",
+  },
+  IN_PROGRESS: {
+    badge: "bg-sky-500/15 text-sky-400 border-sky-500/20",
+    dot: "bg-sky-400 animate-pulse",
+  },
+  COMPLETED: {
+    badge: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+    dot: "bg-emerald-400",
+  },
+  CANCELLED: {
+    badge: "bg-rose-500/15 text-rose-400 border-rose-500/20",
+    dot: "bg-rose-400",
+  },
+};
 
 export default async function DashboardPage() {
   const session = await requireSession();
@@ -18,342 +63,379 @@ export default async function DashboardPage() {
   const lang = (cookieStore.get("lang")?.value || "ar") as Language;
   const t = getTranslations(lang);
 
-  // Fetch real-time metrics
-  const [totalPatients, totalDoctors, todayVisits, pendingExams] = await Promise.all([
-    prisma.patient.count({ where: { isActive: true } }),
-    prisma.doctor.count({ where: { isActive: true } }),
-    prisma.visit.count({
-      where: {
-        visitDate: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        },
-      },
-    }),
-    prisma.visitExam.count({ where: { status: "PENDING" } }),
-  ]);
+  /* ── Data fetching ──────────────────────────────────── */
 
-  // Fetch recent visits
+  const [totalPatients, totalDoctors, todayVisits, pendingExams] =
+    await Promise.all([
+      prisma.patient.count({ where: { isActive: true } }),
+      prisma.doctor.count({ where: { isActive: true } }),
+      prisma.visit.count({
+        where: {
+          visitDate: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
+      }),
+      prisma.visitExam.count({ where: { status: "PENDING" } }),
+    ]);
+
   const recentVisits = await prisma.visit.findMany({
     take: 5,
     orderBy: { visitDate: "desc" },
     include: {
       patient: true,
-      doctors: {
-        include: {
-          doctor: true,
-        },
-      },
+      doctors: { include: { doctor: true } },
     },
   });
 
-  // Fetch data for bar chart (last 7 days)
-  const last7Days = Array.from({ length: 7 }).map((_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    d.setHours(0, 0, 0, 0);
-    return d;
-  }).reverse();
+  // Last 7 days visit counts for the area chart
+  const last7Days = Array.from({ length: 7 })
+    .map((_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      d.setHours(0, 0, 0, 0);
+      return d;
+    })
+    .reverse();
 
   const visitCounts = await Promise.all(
     last7Days.map(async (date) => {
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
       const count = await prisma.visit.count({
-        where: {
-          visitDate: {
-            gte: date,
-            lt: nextDate,
-          },
-        },
+        where: { visitDate: { gte: date, lt: nextDate } },
       });
       return {
-        label: lang === "ar" 
-          ? date.toLocaleDateString("ar-IQ", { weekday: "short" })
-          : date.toLocaleDateString("en-US", { weekday: "short" }),
+        label:
+          lang === "ar"
+            ? date.toLocaleDateString("ar-IQ", { weekday: "short" })
+            : date.toLocaleDateString("en-US", { weekday: "short" }),
         count,
       };
-    })
+    }),
   );
 
-  const statusStyles: Record<string, { badge: string; dot: string }> = {
-    PENDING: {
-      badge: "bg-amber-500/10 text-amber-400 border-amber-500/15 backdrop-blur-sm",
-      dot: "bg-amber-400",
-    },
-    IN_PROGRESS: {
-      badge: "bg-cyan-500/10 text-cyan-400 border-cyan-500/15 backdrop-blur-sm",
-      dot: "bg-cyan-400 animate-pulse",
-    },
-    COMPLETED: {
-      badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/15 backdrop-blur-sm",
-      dot: "bg-emerald-400",
-    },
-    CANCELLED: {
-      badge: "bg-rose-500/10 text-rose-400 border-rose-500/15 backdrop-blur-sm",
-      dot: "bg-rose-400",
-    },
-  };
+  /* ── Render ─────────────────────────────────────────── */
 
   return (
-    <div className="space-y-8 relative">
-      {/* ════ Ambient Background Glow Orbs ════ */}
-      <div className="glow-orb glow-orb-cyan w-[600px] h-[600px] -top-60 -left-60 fixed" />
-      <div className="glow-orb glow-orb-purple w-[500px] h-[500px] top-1/3 -right-48 fixed" style={{ animationDelay: "3s" }} />
-      <div className="glow-orb glow-orb-teal w-[450px] h-[450px] bottom-0 left-1/4 fixed" style={{ animationDelay: "1.5s" }} />
+    <div className="space-y-7 relative">
+      {/* Ambient glow orbs */}
+      <div
+        className="dashboard-glow-orb w-[800px] h-[800px] -top-64 -left-64"
+        style={{ "--orb-color": "rgba(6,182,212,0.6)" } as React.CSSProperties}
+      />
+      <div
+        className="dashboard-glow-orb w-[700px] h-[700px] top-1/4 -right-48"
+        style={
+          {
+            "--orb-color": "rgba(167,139,250,0.5)",
+            animationDelay: "3s",
+          } as React.CSSProperties
+        }
+      />
 
-      {/* ════ Header Greeting ════ */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-up">
+      {/* ─── Header ─────────────────────────────────── */}
+      <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 animate-fade-up">
         <div>
-          <div className="flex items-center gap-3 mb-1.5">
-            <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/15">
-              <Sparkles className="h-5 w-5 text-cyan-400" />
-            </div>
-            <h1 className="text-3xl font-extrabold text-white tracking-tight">
-              {t.dashboard.title}
-            </h1>
-          </div>
-          <p className="text-sm font-medium text-slate-400 mt-1.5">
-            {t.auth.welcomeBack}، {session.username} 👋
+          <h1 className="text-2xl font-extrabold text-white tracking-tight">
+            {t.dashboard.title}
+          </h1>
+          <p className="text-sm text-slate-400 mt-1">
+            {t.auth.welcomeBack},{" "}
+            <span className="text-cyan-400 font-semibold">
+              {session.username}
+            </span>
+            !
           </p>
         </div>
 
-        {/* Quick Actions Panel */}
         <div className="flex items-center gap-3">
-          <Button asChild className="glass-card !border-slate-700/40 hover:!border-cyan-500/25 text-slate-200 font-semibold rounded-xl cursor-pointer h-10 px-4">
+          <Button
+            asChild
+            variant="outline"
+            className="border-teal-500/50 bg-transparent hover:bg-teal-500/10 text-teal-400 hover:text-teal-300 rounded-xl h-9 px-4 cursor-pointer transition-colors"
+          >
             <Link href="/visits/new" className="flex items-center gap-2">
               <Plus className="h-4 w-4 text-cyan-400" />
-              <span>{t.dashboard.newVisit}</span>
+              <span className="text-sm font-semibold">
+                {t.dashboard.newVisit}
+              </span>
             </Link>
           </Button>
-          <Button asChild className="bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-semibold rounded-xl cursor-pointer shadow-lg shadow-cyan-500/20 h-10 px-4">
+          <Button
+            asChild
+            className="bg-gradient-to-r from-cyan-600 to-teal-500 hover:from-cyan-500 hover:to-teal-400 text-white rounded-xl h-9 px-4 shadow-lg shadow-cyan-900/40 cursor-pointer btn-premium-glow border-0"
+          >
             <Link href="/patients/new" className="flex items-center gap-2">
               <Plus className="h-4 w-4" />
-              <span>{t.dashboard.newPatient}</span>
+              <span className="text-sm font-semibold">
+                {t.dashboard.newPatient}
+              </span>
             </Link>
           </Button>
         </div>
-      </div>
+      </section>
 
-      {/* ════ Statistics Metric Cards Grid ════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="animate-fade-up animate-delay-100">
+      {/* ─── Stats Cards ────────────────────────────── */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="animate-fade-up animate-delay-1">
           <StatsCard
             title={t.dashboard.totalPatients}
             value={totalPatients}
-            description={t.dashboard.activePatients}
             icon={Users}
             variant="cyan"
           />
         </div>
-        <div className="animate-fade-up animate-delay-200">
+        <div className="animate-fade-up animate-delay-2">
           <StatsCard
             title={t.dashboard.totalDoctors}
             value={totalDoctors}
-            description={t.dashboard.activeDoctors}
             icon={Stethoscope}
             variant="emerald"
           />
         </div>
-        <div className="animate-fade-up animate-delay-300">
+        <div className="animate-fade-up animate-delay-3">
           <StatsCard
             title={t.dashboard.todayVisits}
             value={todayVisits}
-            description={t.dashboard.recentVisits}
             icon={Calendar}
             variant="purple"
           />
         </div>
-        <div className="animate-fade-up animate-delay-400">
+        <div className="animate-fade-up animate-delay-4">
           <StatsCard
             title={t.dashboard.pendingExams}
             value={pendingExams}
-            description={t.dashboard.pendingExams}
             icon={TestTube}
             variant="amber"
           />
         </div>
-      </div>
+      </section>
 
-      {/* ════ Main Grid: Chart + Table + Quick Actions ════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column (Chart & Table) */}
-        <div className="lg:col-span-2 space-y-8">
-          
-          {/* Weekly Chart — Glass Panel */}
-          <div className="glass-panel rounded-3xl p-6 relative overflow-hidden animate-fade-up animate-delay-300">
-            {/* Glow orb behind chart */}
-            <div className="glow-orb glow-orb-purple w-56 h-56 -top-20 -right-8" style={{ animationDelay: "2s" }} />
-            
-            {/* Inner frost reflection */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      {/* ─── Chart + Quick Actions Row ──────────────── */}
+      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Area Chart */}
+        <div className="lg:col-span-2 glass-panel-premium rounded-2xl p-7 animate-fade-up animate-delay-4">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <BarChart3 className="h-5 w-5 text-cyan-400" />
+            </div>
+            <h2 className="text-sm font-bold text-slate-200 tracking-wide">
+              {lang === "ar"
+                ? "الزيارات (آخر 7 أيام)"
+                : "Visits (Last 7 Days)"}
+            </h2>
+          </div>
+          <VisitAreaChart data={visitCounts} lang={lang} />
+        </div>
 
-            <div className="flex items-center mb-6 relative z-10">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-500/10 border border-purple-500/15">
-                  <BarChart className="h-5 w-5 text-purple-400" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-100">
-                  {lang === "ar" ? "الزيارات (آخر 7 أيام)" : "Visits (Last 7 Days)"}
-                </h3>
-              </div>
-            </div>
-            <div className="relative z-10">
-              <VisitBarChart data={visitCounts} lang={lang} />
-            </div>
+        {/* Quick Actions */}
+        <div className="glass-panel-premium rounded-2xl p-7 animate-fade-up animate-delay-5 flex flex-col">
+          <h2 className="text-sm font-bold text-slate-200 tracking-wide mb-6">
+            {t.dashboard.quickActions}
+          </h2>
+
+          {/* Two action cards side by side */}
+          <div className="grid grid-cols-2 gap-4 mb-4">
+            <QuickActionCard
+              href="/patients/new"
+              icon={UserPlus}
+              label={t.dashboard.newPatient}
+              description={
+                lang === "ar"
+                  ? "إنشاء ملف مريض جديد"
+                  : "Register a new patient"
+              }
+              buttonLabel={t.dashboard.newPatient}
+              color="cyan"
+            />
+            <QuickActionCard
+              href="/visits/new"
+              icon={CalendarPlus}
+              label={t.dashboard.newVisit}
+              description={
+                lang === "ar"
+                  ? "تسجيل موعد كشف طبي"
+                  : "Schedule a new appointment"
+              }
+              buttonLabel={t.dashboard.newVisit}
+              color="teal"
+            />
           </div>
 
-          {/* Recent Visits Table — Glass Panel */}
-          <div className="glass-panel rounded-3xl p-6 relative overflow-hidden animate-fade-up animate-delay-400">
-            {/* Glow orb behind table */}
-            <div className="glow-orb glow-orb-cyan w-52 h-52 -bottom-16 -left-16" style={{ animationDelay: "4s" }} />
-
-            {/* Inner frost reflection */}
-            <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-            <div className="flex items-center justify-between mb-6 relative z-10">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-cyan-500/10 border border-cyan-500/15">
-                  <Calendar className="h-5 w-5 text-cyan-400" />
-                </div>
-                <h3 className="text-lg font-bold text-slate-100">
-                  {t.dashboard.recentVisits}
-                </h3>
-              </div>
-              <Button asChild variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300 hover:bg-cyan-500/10 font-semibold cursor-pointer rounded-xl">
-                <Link href="/visits" className="flex items-center gap-1">
-                  <span>{t.dashboard.viewAll}</span>
-                  <ArrowUpRight className="h-4 w-4" />
-                </Link>
-              </Button>
+          {/* Examinations card */}
+          <Link
+            href="/examinations"
+            className="flex-1 flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-purple-500/30 transition-all duration-300 group"
+          >
+            <div className="p-3 rounded-xl bg-purple-500/10 text-purple-400 group-hover:scale-105 transition-transform shadow-[0_0_12px_rgba(167,139,250,0.1)]">
+              <Microscope className="h-6 w-6" strokeWidth={1.5} />
             </div>
+            <div className="flex-1 min-w-0">
+              <h4 className="text-sm font-bold text-slate-200">
+                {t.nav.examinations}
+              </h4>
+              <p className="text-xs text-slate-400 mt-1 truncate">
+                {lang === "ar"
+                  ? "إدارة الفحوصات والنتائج"
+                  : "Manage exams and results"}
+              </p>
+            </div>
+            <Button
+              size="sm"
+              className="bg-purple-600/20 hover:bg-purple-600 text-purple-300 hover:text-white border border-purple-500/30 text-xs rounded-lg px-3 h-8 cursor-pointer shrink-0 transition-colors"
+            >
+              {t.nav.examinations}
+            </Button>
+          </Link>
+        </div>
+      </section>
 
-            <div className="overflow-x-auto relative z-10">
-              {recentVisits.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 font-medium">
-                  <div className="p-4 rounded-2xl bg-slate-800/20 inline-block mb-3">
-                    <Calendar className="h-8 w-8 text-slate-600" />
-                  </div>
-                  <p>{t.visits.noVisits}</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader className="border-slate-800/40">
-                    <TableRow className="border-slate-800/40 hover:bg-transparent">
-                      <TableHead className="text-slate-400 font-bold text-xs uppercase tracking-wider">{t.visits.patient}</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-xs uppercase tracking-wider">{t.visits.visitDate}</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-xs uppercase tracking-wider">{t.visits.doctors}</TableHead>
-                      <TableHead className="text-slate-400 font-bold text-xs uppercase tracking-wider text-center">{t.visits.status}</TableHead>
+      {/* ─── Recent Visits Table ─────────────────────── */}
+      <section className="glass-panel-premium rounded-2xl p-7 animate-fade-up animate-delay-6 relative overflow-hidden">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-white/[0.03] border border-white/[0.05]">
+              <Calendar className="h-5 w-5 text-teal-400" />
+            </div>
+            <h2 className="text-sm font-bold text-slate-200 tracking-wide">
+              {t.dashboard.recentVisits}
+            </h2>
+          </div>
+          <Link
+            href="/visits"
+            className="flex items-center gap-1 text-xs text-slate-400 hover:text-cyan-400 font-semibold transition-colors"
+          >
+            {t.dashboard.viewAll}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+
+        {/* Table */}
+        <div className="overflow-x-auto">
+          {recentVisits.length === 0 ? (
+            <div className="text-center py-10 text-slate-500">
+              <Calendar className="h-8 w-8 mx-auto mb-2 text-slate-400" />
+              <p className="font-medium">{t.visits.noVisits}</p>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-white/5 hover:bg-transparent">
+                  <TableHead className="text-slate-400 font-bold text-xs bg-white/[0.02] rounded-l-lg h-10">
+                    {t.visits.patient}
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-bold text-xs bg-white/[0.02] h-10">
+                    {t.visits.visitDate}
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-bold text-xs bg-white/[0.02] h-10">
+                    {t.visits.doctors}
+                  </TableHead>
+                  <TableHead className="text-slate-400 font-bold text-xs text-center bg-white/[0.02] rounded-r-lg h-10">
+                    {t.visits.status}
+                  </TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {recentVisits.map((visit) => {
+                  const s =
+                    STATUS_STYLES[visit.status] ?? STATUS_STYLES.PENDING;
+                  return (
+                    <TableRow
+                      key={visit.id}
+                      className="border-white/5 hover:bg-white/[0.02] transition-colors"
+                    >
+                      <TableCell className="font-semibold text-slate-200 py-3">
+                        <Link
+                          href={`/patients/${visit.patientId}`}
+                          className="hover:text-cyan-400 transition-colors"
+                        >
+                          {visit.patient.fullName}
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-slate-400 text-xs font-mono py-3">
+                        {formatDate(
+                          visit.visitDate,
+                          lang === "ar" ? "ar-IQ" : "en-US",
+                        )}
+                      </TableCell>
+                      <TableCell className="text-slate-400 text-xs py-3">
+                        {visit.doctors
+                          .map((d) => d.doctor.fullName)
+                          .join("، ") || "—"}
+                      </TableCell>
+                      <TableCell className="text-center py-3">
+                        <Badge
+                          className={`rounded-full px-3 py-1 border-0 text-xs font-semibold inline-flex items-center gap-1.5 ${s.badge}`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full shrink-0 ${s.dot}`}
+                          />
+                          {t.status[visit.status as keyof typeof t.status]}
+                        </Badge>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {recentVisits.map((visit) => {
-                      const statusStyle = statusStyles[visit.status] || statusStyles.PENDING;
-                      return (
-                        <TableRow key={visit.id} className="border-slate-800/30 glass-table-row">
-                          <TableCell className="font-semibold text-slate-200">
-                            <Link href={`/patients/${visit.patientId}`} className="hover:text-cyan-400 transition-colors duration-200 flex items-center gap-2">
-                              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500/20 to-teal-500/20 border border-cyan-500/10 flex items-center justify-center shrink-0">
-                                <Users className="h-3.5 w-3.5 text-cyan-400" />
-                              </div>
-                              <span>{visit.patient.fullName}</span>
-                            </Link>
-                          </TableCell>
-                          <TableCell className="text-slate-400 font-mono text-xs">
-                            {formatDate(visit.visitDate, lang === "ar" ? "ar-IQ" : "en-US")}
-                          </TableCell>
-                          <TableCell className="text-slate-400 text-xs font-medium">
-                            {visit.doctors.map((d) => d.doctor.fullName).join("، ") || "—"}
-                          </TableCell>
-                          <TableCell className="text-center">
-                            <Badge className={`rounded-lg px-3 py-1.5 border font-semibold text-xs inline-flex items-center gap-1.5 ${statusStyle.badge}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${statusStyle.dot}`} />
-                              {t.status[visit.status as keyof typeof t.status]}
-                            </Badge>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
-                  </TableBody>
-                </Table>
-              )}
-            </div>
-          </div>
+                  );
+                })}
+              </TableBody>
+            </Table>
+          )}
         </div>
-
-        {/* ════ Quick Menu — Glass Panel ════ */}
-        <div className="glass-panel rounded-3xl p-6 relative overflow-hidden flex flex-col justify-between animate-fade-up animate-delay-500">
-          {/* Glow orb */}
-          <div className="glow-orb glow-orb-teal w-48 h-48 -top-16 -right-16" style={{ animationDelay: "1s" }} />
-
-          {/* Inner frost reflection */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-          <div className="relative z-10">
-            <div className="flex items-center gap-2.5 mb-6">
-              <div className="p-2 rounded-xl bg-teal-500/10 border border-teal-500/15">
-                <Zap className="h-5 w-5 text-teal-400" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-100">
-                {t.dashboard.quickActions}
-              </h3>
-            </div>
-
-            <div className="space-y-3.5">
-              {/* New Patient */}
-              <Link
-                href="/patients/new"
-                className="quick-action-glass flex items-center justify-between p-4 rounded-2xl group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/15 text-cyan-400 group-hover:scale-110 group-hover:bg-cyan-500/20 transition-all duration-300">
-                    <Plus className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{t.dashboard.newPatient}</h4>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">تسجيل مريض جديد في النظام</p>
-                  </div>
-                </div>
-                <ArrowUpRight className="h-5 w-5 text-slate-600 group-hover:text-cyan-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
-
-              {/* New Visit */}
-              <Link
-                href="/visits/new"
-                className="quick-action-glass flex items-center justify-between p-4 rounded-2xl group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-teal-500/10 border border-teal-500/15 text-teal-400 group-hover:scale-110 group-hover:bg-teal-500/20 transition-all duration-300">
-                    <Calendar className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{t.dashboard.newVisit}</h4>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">حجز أو تسجيل موعد كشف طبي</p>
-                  </div>
-                </div>
-                <ArrowUpRight className="h-5 w-5 text-slate-600 group-hover:text-teal-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
-
-              {/* Examinations */}
-              <Link
-                href="/examinations"
-                className="quick-action-glass flex items-center justify-between p-4 rounded-2xl group"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="p-2.5 rounded-xl bg-purple-500/10 border border-purple-500/15 text-purple-400 group-hover:scale-110 group-hover:bg-purple-500/20 transition-all duration-300">
-                    <TestTube className="h-5 w-5" />
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-slate-200 group-hover:text-white transition-colors">{t.nav.examinations}</h4>
-                    <p className="text-xs text-slate-500 font-medium mt-0.5">إدارة وإدخال نتائج الفحوصات</p>
-                  </div>
-                </div>
-                <ArrowUpRight className="h-5 w-5 text-slate-600 group-hover:text-purple-400 transition-all duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-              </Link>
-            </div>
-          </div>
-        </div>
-      </div>
+      </section>
     </div>
+  );
+}
+
+/* ────────────────────────────────────────────────────────
+   QuickActionCard — Matches reference design: icon, text,
+   CTA button inside a mini card.
+   ──────────────────────────────────────────────────────── */
+
+function QuickActionCard({
+  href,
+  icon: Icon,
+  label,
+  description,
+  buttonLabel,
+  color,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  description: string;
+  buttonLabel: string;
+  color: "cyan" | "teal";
+}) {
+  const colors = {
+    cyan: {
+      iconBg: "bg-cyan-500/10 text-cyan-400",
+      btn: "bg-cyan-600 hover:bg-cyan-500",
+    },
+    teal: {
+      iconBg: "bg-teal-500/10 text-teal-400",
+      btn: "bg-teal-600 hover:bg-teal-500",
+    },
+  };
+  const c = colors[color];
+
+  return (
+    <Link
+      href={href}
+      className="flex flex-col items-center text-center p-5 rounded-2xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] hover:border-cyan-500/30 transition-all duration-300 group"
+    >
+      <div
+        className={`p-3 rounded-xl ${c.iconBg} mb-4 group-hover:scale-105 transition-transform shadow-[0_0_12px_currentColor] opacity-90`}
+      >
+        <Icon className="h-6 w-6" strokeWidth={1.5} />
+      </div>
+      <h4 className="text-sm font-bold text-slate-200 mb-1.5">{label}</h4>
+      <p className="text-[11px] text-slate-400 leading-relaxed mb-4 line-clamp-2">
+        {description}
+      </p>
+      <span
+        className={`text-xs font-semibold text-white px-4 py-1.5 rounded-lg ${c.btn} transition-colors btn-premium-glow`}
+      >
+        {buttonLabel}
+      </span>
+    </Link>
   );
 }
